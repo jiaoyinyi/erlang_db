@@ -1,7 +1,7 @@
-db
+erlang_db
 =====
 
-An OTP application
+池化mysql数据接口，使用poolboy和mysql-otp实现，自己使用，勿喷
 
 Build
 -----

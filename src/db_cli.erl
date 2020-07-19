@@ -25,7 +25,7 @@
 start_link(Args) ->
     gen_server:start_link(?MODULE, Args, []).
 
-init([Args]) ->
+init(Args) ->
     {ok, Conn} = mysql:start_link(Args),
     {ok, #state{conn = Conn}}.
 
@@ -47,10 +47,6 @@ handle_call({query, Query, Args, Timeout}, _From, State = #state{conn = Conn}) -
 
 handle_call({query, Query, Args, FilterMap, Timeout}, _From, State = #state{conn = Conn}) ->
     Reply = mysql:query(Conn, Query, Args, FilterMap, Timeout),
-    {reply, Reply, State};
-
-handle_call({execute, Ref, Args}, _From, State = #state{conn = Conn}) ->
-    Reply = mysql:execute(Conn, Ref, Args),
     {reply, Reply, State};
 
 handle_call({execute, Ref, Args}, _From, State = #state{conn = Conn}) ->
@@ -102,15 +98,15 @@ handle_call(in_transaction, _From, State = #state{conn = Conn}) ->
     {reply, Reply, State};
 
 handle_call({transaction, Fun}, _From, State = #state{conn = Conn}) ->
-    Reply = mysql:transaction(Conn, Fun),
+    Reply = mysql:transaction(Conn, fun() -> Fun(Conn) end),
     {reply, Reply, State};
 
 handle_call({transaction, Fun, Retries}, _From, State = #state{conn = Conn}) ->
-    Reply = mysql:transaction(Conn, Fun, Retries),
+    Reply = mysql:transaction(Conn, fun() -> Fun(Conn) end, Retries),
     {reply, Reply, State};
 
 handle_call({transaction, Fun, Args, Retries}, _From, State = #state{conn = Conn}) ->
-    Reply = mysql:transaction(Conn, Fun, Args, Retries),
+    Reply = mysql:transaction(Conn, fun() -> Fun(Conn) end, Args, Retries),
     {reply, Reply, State};
 
 handle_call({change_user, Username, Password}, _From, State = #state{conn = Conn}) ->
@@ -124,6 +120,9 @@ handle_call({change_user, Username, Password, Options}, _From, State = #state{co
 handle_call(reset_connection, _From, State = #state{conn = Conn}) ->
     Reply = mysql:reset_connection(Conn),
     {reply, Reply, State};
+
+handle_call(get_conn, _From, State = #state{conn = Conn}) ->
+    {reply, {ok, Conn}, State};
 
 handle_call(_Call, _From, State) ->
     {reply, {error, bad_call}, State}.
