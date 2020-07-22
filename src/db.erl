@@ -11,6 +11,7 @@
 
 %% API
 -export([
+    start_link/2,
     query/2, query/3, query/4, query/5,
     pool_query/1, pool_query/2, pool_query/3, pool_query/4,
     execute/3, execute/4, execute/5,
@@ -44,6 +45,11 @@
                         | {ok, column_names(), rows()}
                         | {ok, [{column_names(), rows()}, ...]}
                         | {error, server_reason()}.
+
+-spec start_link(list(), list()) -> {ok, pid()} | ignore | {error, term()}.
+start_link(SizeArgs, WorkerArgs) ->
+    PoolArgs = [{name, {local, ?POOL_NAME}}, {worker_module, db_cli}] ++ SizeArgs,
+    poolboy:start_link(PoolArgs, WorkerArgs).
 
 -spec query(Conn, Query) -> Result
     when Conn :: mysql:contcion(),

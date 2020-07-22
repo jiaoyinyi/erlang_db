@@ -2,7 +2,6 @@
     [{description, "db api"},
         {vsn, "0.1.0"},
         {registered, []},
-        {mod, {db_app, []}},
         {applications,
             [
                 kernel,
